@@ -3,7 +3,7 @@ use chrono::{DateTime, Local};
 use std::{
     fs::OpenOptions,
     io::Write,
-    sync::{Mutex,Arc},
+    sync::{Mutex,Arc,mpsc},
     thread,
     time::Duration,
     time::{SystemTime, UNIX_EPOCH},
@@ -33,13 +33,13 @@ impl Sensor{
 }
 
 
-fn collect_sensor_data(sens:u32,file_dir:&str,fil_mut:&Arc<Mutex<()>>){
+fn collect_sensor_data(sens:u32,tx: mpsc::Sender<(u32, f64, String)>){
     let mut sensor=Sensor::new(sens);
     loop {
         sensor.collect_data();
         let timestamp=time();
         println!("time is : {}  ,Sensor {} Data: {:.2} C",timestamp,sensor.id,sensor.data);
-        log_data(sensor.id, sensor.data, file_dir, fil_mut,timestamp);
+        tx.send((sensor.id,sensor.data,timestamp)).expect("Unable to send data");
         thread::sleep(Duration::from_secs(1));
     }
 
@@ -59,19 +59,24 @@ fn log_data(sen_id:u32,data:f64,file_dir:&str,fil_mut:&Arc<Mutex<()>>,t:String){
 
 fn main() {
 
+    let (tx, rx) = mpsc::channel();
+
     let file_dir="records.txt";
     let file_mux=Arc::new(Mutex::new(()));
-    let mx_clone1=Arc::clone(&file_mux);
-    let mx_clone2=Arc::clone(&file_mux);
+    let mx_clone1=tx.clone();
+    let mx_clone2=tx.clone();
 
     let h1=thread::spawn(move||{
-        collect_sensor_data(1, file_dir, &mx_clone1);
+        collect_sensor_data(1,  mx_clone1);
     });
     let h2=thread::spawn(move||{
-        collect_sensor_data(2, file_dir, &mx_clone2);
+        collect_sensor_data(2, mx_clone2);
     });
 
-    
+    for received in rx {
+        let (sen_id, data, t) = received;
+        log_data(sen_id, data, file_dir, &file_mux, t);
+    }
     h1.join().expect("Thread 1 panicked");
     h2.join().expect("Thread 2 panicked");
 }

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Sensor Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap; /* Preserve line breaks */
+        }
+    </style>
+</head>
+<body>
+    <h1>Live Sensor Data</h1>
+    <pre id="sensor-data">Waiting for data...</pre>
+
+    <script>
+        // Connect to the SSE endpoint
+        const eventSource = new EventSource("http://127.0.0.1:7878/events");
+
+        // Listen for messages from the server
+        eventSource.onmessage = function(event) {
+            const sensorDataElement = document.getElementById("sensor-data");
+
+            // Append new data to the existing content
+            if (sensorDataElement.textContent === "Waiting for data...") {
+                sensorDataElement.textContent = event.data; // Replace initial message
+            } else {
+                sensorDataElement.textContent += "\n" + event.data; // Append new data
+            }
+        };
+
+        // Handle errors
+        eventSource.onerror = function() {
+            console.error("SSE connection error");
+            eventSource.close();
+        };
+    </script>
+</body>
+</html>

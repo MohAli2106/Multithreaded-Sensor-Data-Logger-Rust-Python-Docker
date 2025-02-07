@@ -1,68 +1,97 @@
-use std::{io::{BufRead as Br,BufReader as Brr, Write},net::{TcpListener as TL,TcpStream as TS},thread,sync::{Mutex as Mx,Arc},};
-use std::io;
-pub struct Tcpserv{
+use std::{
+    io::{self, BufRead, BufReader, Write},
+    net::{TcpListener, TcpStream},
+    sync::{Arc, Mutex},
+    thread,
+    time::Duration,
+};
+
+pub struct Tcpserv {
     address: String,
-    data_sto:Arc<Mx<String>>,
+    data_sto: Arc<Mutex<Vec<String>>>, // Store data in a Vec<String>
 }
-impl Tcpserv{
-    pub fn new(adrs: &str)->Self{
-        Tcpserv{
-            address:adrs.to_string(),
-            data_sto:Arc::new(Mx::new(String::new())),
 
+impl Tcpserv {
+    pub fn new(address: &str) -> Self {
+        Tcpserv {
+            address: address.to_string(),
+            data_sto: Arc::new(Mutex::new(Vec::new())), // Initialize empty vector
+        }
     }
-}
-fn handle_serv(mut stream:TS,data_sto:Arc<Mx<String>>){
-    let mut reader=Brr::new(&stream);
-    let mut req=String::new();
 
-    if reader.read_line(&mut req).is_ok(){
-if req.starts_with("GET / "){
-    let res_body={
-        let data=data_sto.lock().unwrap();
-        format!("Sensor Data: \n {}",data)
-    };
-
-    let response =format!( "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}",
-    res_body.len(),
-    res_body);
-    stream.write_all(response.as_bytes()).expect("couldnot write to stream");
-
-}
-
-}
-
+    fn handle_serv(mut stream: TcpStream, data_sto: Arc<Mutex<Vec<String>>>) {
+        let mut reader = BufReader::new(&stream);
+        let mut request = String::new();
     
-}
-
-
-pub fn server_on(&self)->io::Result<()>{
-    let les=TL::bind(&self.address).expect("couldnot bind to address");
-   
-    println!("the server is ready on {}",self.address);
-   
-
-    for i in les.incoming(){
-        match i{
-            Ok(i)=>{
-                let d_sto=self.data_sto.clone();
-                thread::spawn(move || Tcpserv::handle_serv(i,d_sto));
-                println!("new connection established");
+        if reader.read_line(&mut request).is_ok() {
+            if request.starts_with("GET /events") {
+                // SSE response headers
+                let response_headers = "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: keep-alive\r\n\r\n";
+                stream
+                    .write_all(response_headers.as_bytes())
+                    .expect("Could not write headers");
+    
+                // Send all historical data
+                let historical_data = {
+                    let data = data_sto.lock().unwrap();
+                    data.clone() // Clone the data to avoid holding the lock for too long
+                };
+    
+                for data in historical_data {
+                    let event = format!("data: {}\n\n", data);
+                    stream
+                        .write_all(event.as_bytes())
+                        .expect("Could not write historical data");
+                }
+    
+                // Keep the connection open and send updates
+                loop {
+                    let new_data = {
+                        let data = data_sto.lock().unwrap();
+                        data.last().cloned() // Get the latest data
+                    };
+    
+                    if let Some(data) = new_data {
+                        let event = format!("data: {}\n\n", data);
+                        stream
+                            .write_all(event.as_bytes())
+                            .expect("Could not write event");
+                    }
+    
+                    thread::sleep(Duration::from_secs(1)); // Simulate real-time updates
+                }
+            } else if request.starts_with("GET / ") {
+                // Serve the index.html file
+                let response_headers = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+                let response_body = include_str!("index.html"); // Include the HTML file
+    
+                let response = format!("{}{}", response_headers, response_body);
+                stream
+                    .write_all(response.as_bytes())
+                    .expect("Could not write to stream");
             }
-            Err(e)=>eprintln!("couldnot connect: {}",e),
+        }
+    }
+    pub fn server_on(&self) -> io::Result<()> {
+        let listener = TcpListener::bind(&self.address)?;
+        println!("Server is ready on {}", self.address);
+
+        for stream in listener.incoming() {
+            match stream {
+                Ok(stream) => {
+                    let data_sto = self.data_sto.clone();
+                    thread::spawn(move || Tcpserv::handle_serv(stream, data_sto));
+                    println!("New connection established");
+                }
+                Err(e) => eprintln!("Could not connect: {}", e),
+            }
         }
 
-
+        Ok(())
     }
-    Ok(())
-}
 
-    pub fn update_data(&self,new_data:String){
-    let mut data=self.data_sto.lock().unwrap();
-        *data=new_data;
-
-
-
-}
-
+    pub fn update_data(&self, new_data: String) {
+        let mut data = self.data_sto.lock().unwrap();
+        data.push(new_data); // Append new data to the storage
+    }
 }

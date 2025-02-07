@@ -18,6 +18,8 @@ This project is a dynamic multithreaded sensor data logger built with Rust. It s
 
 * Synchronization through Mutex prevents data conflicts during file writing.
 
+* pushing the data into server using some HTML implementation
+
   
 ## Customization
 

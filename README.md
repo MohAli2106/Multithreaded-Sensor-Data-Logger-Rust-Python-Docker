@@ -14,7 +14,7 @@ This project is a dynamic multithreaded sensor data logger built with Rust. It s
 
 * Each thread simulates a unique sensor generating random temperature readings.
 
-* The readings are displayed on the console and saved in real-time to a TXT file.
+* The readings are displayed on the console and saved in real-time to a TXT file, now the data is sent into local server 127.0.0.1:7878.
 
 * Synchronization through Mutex prevents data conflicts during file writing.
 

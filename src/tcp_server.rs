@@ -8,14 +8,14 @@ use std::{
 
 pub struct Tcpserv {
     address: String,
-    data_sto: Arc<Mutex<Vec<String>>>, // Store data in a Vec<String>
+    data_sto: Arc<Mutex<Vec<String>>>, 
 }
 
 impl Tcpserv {
     pub fn new(address: &str) -> Self {
         Tcpserv {
             address: address.to_string(),
-            data_sto: Arc::new(Mutex::new(Vec::new())), // Initialize empty vector
+            data_sto: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
@@ -25,7 +25,7 @@ impl Tcpserv {
     
         if reader.read_line(&mut request).is_ok() {
             if request.starts_with("GET /events") {
-                // SSE response headers
+               
                 let response_headers = "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: keep-alive\r\n\r\n";
                 stream
                     .write_all(response_headers.as_bytes())

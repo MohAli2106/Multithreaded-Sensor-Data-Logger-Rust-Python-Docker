@@ -8,7 +8,7 @@ mod tcp_server;
 use tcp_server::Tcpserv;
 
 fn main() {
-    let address = "127.0.0.1:7878".to_string();
+    let address = "127.0.0.1:7877".to_string();
     let server = Arc::new(Tcpserv::new(&address));
 
     // Start the server in a separate thread

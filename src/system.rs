@@ -8,8 +8,6 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use crate::tcp_server::Tcpserv; // Import Tcpserv
-
 #[derive(Debug)]
 struct Sensor {
     id: u32,
@@ -30,32 +28,23 @@ impl Sensor {
 fn time() -> String {
     let now = SystemTime::now();
     let datetime: DateTime<Local> = now.into();
-    datetime.format("%H:%M:%S%.3f").to_string()
+    datetime.format("%H:%M:%S.%3f").to_string()
 }
 
 pub fn collect_sensor_data(
     sensor_id: u32,
-    tx: mpsc::Sender<(u32, f64, String)>,
-    server: Arc<Tcpserv>,
+    tx: mpsc::Sender<(u32, f64, String)>
 ) {
     let mut sensor = Sensor::new(sensor_id);
     loop {
         sensor.collect_data();
         let timestamp = time();
         println!(
-            "Time: {}, Sensor {} Data: {:.2} C",
+            "Time: {}, Sensor: {} Data: {:.2} C",
             timestamp, sensor.id, sensor.data
         );
         tx.send((sensor.id, sensor.data, timestamp.clone()))
             .expect("Unable to send data");
-
-        // Format the data and update the server
-        let formatted_data = format!(
-            "Sensor {}:, {:.2} C at ,{}",
-            sensor.id, sensor.data, timestamp
-        );
-        server.update_data(formatted_data);
-
         thread::sleep(Duration::from_secs(1));
     }
 }

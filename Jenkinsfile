@@ -10,13 +10,23 @@ pipeline {
 
         stage('Check Files') {
             steps {
-                sh 'ls -la'  // Make sure Cargo.toml, docfile, and src exist
+                sh 'ls -la'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -f docfile -t data_logger .'
+            }
+        }
+
+        stage('Stop Existing Container (If Any)') {
+            steps {
+                echo 'Stopping and removing any existing container...'
+                sh '''
+                    docker stop my_logger || true
+                    docker rm my_logger || true
+                '''
             }
         }
 
@@ -32,41 +42,20 @@ pipeline {
             }
         }
 
-        stage('Keep Container Running for Testing') {
+        stage('Archive Sensor Log') {
             steps {
-                echo 'Container is running. You can now access the dashboard at http://<your-jenkins-machine-ip>:7877/'
-                input message: 'Press OK to stop the container', submitter: 'Mohamed Moustafa'
-            }
-        }
-
-        stage('Stop and Remove Container') {
-            steps {
-                sh 'docker stop my_logger || true'
-                sh 'docker rm my_logger || true'
+                sh 'mkdir -p logs && docker cp my_logger:/app/sensor_data.log logs/'
+                archiveArtifacts artifacts: 'logs/sensor_data.log'
             }
         }
     }
 
     post {
         success {
-            echo 'Build succeeded! You successfully built and tested a Dockerized Rust app using Jenkins.'
+            echo 'Build succeeded! Rust app ran successfully and sensor data was logged.'
         }
         failure {
             echo 'Build failed. Check the logs above to debug.'
-            emailext (
-                subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                body: '''The Jenkins pipeline failed.
-
-Check the logs for details:
-${BUILD_URL}''',
-                recipientProviders: [[$class: 'DevelopersRecipientProvider']]
-            )
         }
     }
 }
-
-
-
-
-
-

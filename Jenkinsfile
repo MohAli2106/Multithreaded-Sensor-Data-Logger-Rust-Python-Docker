@@ -1,3 +1,9 @@
+
+
+
+
+
+
 pipeline {
     agent any
 
@@ -28,19 +34,12 @@ pipeline {
 
         stage('Stop and Remove Container') {
             steps {
-                sh 'docker stop my_logger && docker rm my_logger'
+                sh 'docker stop my_logger || true'
+                sh 'docker rm my_logger || true'
             }
         }
     }
 }
-
-
-
-
-
-
-
-
 
 
 

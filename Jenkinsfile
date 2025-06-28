@@ -20,31 +20,19 @@ pipeline {
             }
         }
 
-        stage('Stop Existing Container (If Any)') {
-            steps {
-                echo 'Stopping and removing any existing container...'
-                sh '''
-                    docker stop my_logger || true
-                    docker rm my_logger || true
-                '''
-            }
-        }
-
         stage('Run Docker Container') {
             steps {
-                sh 'docker run -d -p 7877:7877 --name my_logger data_logger'
-            }
-        }
-
-        stage('View Logs') {
-            steps {
-                sh 'docker logs my_logger'
+                sh 'docker run --name my_logger data_logger'
             }
         }
 
         stage('Archive Sensor Log') {
             steps {
-                sh 'mkdir -p logs && docker cp my_logger:/app/sensor_data.log logs/'
+                echo 'Saving sensor log file...'
+                sh '''
+                    mkdir -p logs
+                    docker cp my_logger:/app/sensor_data.log logs/
+                '''
                 archiveArtifacts artifacts: 'logs/sensor_data.log'
             }
         }
@@ -52,10 +40,10 @@ pipeline {
 
     post {
         success {
-            echo 'Build succeeded! Rust app ran successfully and sensor data was logged.'
+            echo '✅ Build succeeded! Your Rust-based data logger ran successfully and logged sensor data.'
         }
         failure {
-            echo 'Build failed. Check the logs above to debug.'
+            echo '❌ Build failed. Check the logs above to debug.'
         }
     }
 }

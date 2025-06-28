@@ -1,6 +1,6 @@
 # Multithreaded Sensor Data Logger in Rust
 
-This project is a multithreaded sensor data logger written in Rust. It simulates real-time data collection from multiple sensors, logs the data to a file, and streams live updates to a web interface using a built-in TCP server. The system is designed for concurrency, reliability, and extensibility, and includes Docker and CI/CD integration for easy deployment.
+This project is a multithreaded sensor data logger written in Rust. It simulates real-time data collection from multiple sensors and logs the data to a file. The system is designed for concurrency, reliability, and extensibility, and includes Docker and CI/CD integration for easy deployment.
 
 ---
 
@@ -8,9 +8,7 @@ This project is a multithreaded sensor data logger written in Rust. It simulates
 
 - **Concurrent Data Collection:** Each sensor runs in its own thread, generating random temperature readings.
 - **Real-Time Logging:** Sensor data is logged to `sensor_data.log` with timestamps in a thread-safe manner.
-- **Live Web Dashboard:** A simple HTML dashboard displays live sensor data using Server-Sent Events (SSE).
 - **Thread-Safe Synchronization:** Uses `Mutex` and `Arc` for safe shared access to resources.
-- **Custom TCP Server:** Serves both the dashboard and the SSE endpoint.
 - **Docker Support:** Easily build and run the system in a container.
 - **CI/CD Pipeline:** Jenkins pipeline automates build, test, and deployment steps.
 
@@ -20,10 +18,8 @@ This project is a multithreaded sensor data logger written in Rust. It simulates
 
 1. **Sensors:** Simulated sensors generate random temperature data every second in their own threads.
 2. **Data Logging:** Each reading is written to `sensor_data.log` with a timestamp, using a mutex to prevent race conditions.
-3. **Web Dashboard:** Open [http://127.0.0.1:7877/](http://127.0.0.1:7877/) in your browser to view live updates.
-4. **SSE Endpoint:** The dashboard connects to `/events` for real-time updates.
-5. **Dockerized Deployment:** The system can be built and run in a Docker container for portability.
-6. **CI/CD:** Jenkinsfile automates cloning, building, running, and cleaning up the Docker environment.
+3. **Dockerized Deployment:** The system can be built and run in a Docker container for portability.
+4. **CI/CD:** Jenkinsfile automates cloning, building, running, and cleaning up the Docker environment.
 
 ---
 
@@ -41,7 +37,7 @@ This project is a multithreaded sensor data logger written in Rust. It simulates
 cargo run --release
 ```
 
-The server will start on `127.0.0.1:7877`. Open your browser to [http://127.0.0.1:7877/](http://127.0.0.1:7877/) to see live sensor data.
+The logger will start and write data to `sensor_data.log`.
 
 ### Using Docker
 
@@ -49,7 +45,7 @@ Build and run with Docker:
 
 ```sh
 docker build -t data_logger .
-docker run -p 7877:7877 data_logger
+docker run --name logger data_logger
 ```
 
 ### Using Jenkins (CI/CD)
@@ -66,10 +62,8 @@ The [Jenkinsfile](Jenkinsfile) automates the following steps:
 
 ## Project Structure
 
-- [`src/main.rs`](src/main.rs) — Entry point, starts sensors and server threads.
+- [`src/main.rs`](src/main.rs) — Entry point, starts sensors and manages logging.
 - [`src/system.rs`](src/system.rs) — Sensor simulation and data logging logic.
-- `src/tcp_server.rs` — TCP server for HTTP and SSE (add this file if not present).
-- `src/index.html` — Web dashboard (served by the TCP server).
 - [`sensor_data.log`](sensor_data.log) — Output log file (created at runtime).
 - [`Jenkinsfile`](Jenkinsfile) — Jenkins pipeline for CI/CD.
 - [`docfile`](docfile) — Dockerfile for building the container image.
@@ -81,7 +75,6 @@ The [Jenkinsfile](Jenkinsfile) automates the following steps:
 - **Add More Sensors:** Spawn more threads in [`main.rs`](src/main.rs).
 - **Change Logging Frequency:** Adjust `thread::sleep` in [`system.rs`](src/system.rs).
 - **Change Log Format:** Edit the `log_data` function in [`system.rs`](src/system.rs).
-- **Modify Web Dashboard:** Edit `src/index.html` for custom UI.
 
 ---
 
@@ -95,7 +88,6 @@ Time: 2024-06-01 12:34:56, Sensor: 1, Data: 23.45
 
 ## Troubleshooting
 
-- **Port Already in Use:** Make sure port 7877 is free or change it in the code.
 - **Docker Issues:** Ensure Docker is running and you have permission to run containers.
 - **Jenkins Pipeline Fails:** Check the console output for errors in build or run steps.
 

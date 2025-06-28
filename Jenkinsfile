@@ -22,7 +22,7 @@ pipeline {
 
         stage('Run Docker Container') {
             steps {
-                sh 'docker run --name sensor_logger data_logger'
+                sh 'docker run --name logger data_logger'
             }
         }
 

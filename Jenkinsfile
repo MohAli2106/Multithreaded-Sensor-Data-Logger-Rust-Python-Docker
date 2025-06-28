@@ -16,7 +16,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -f docfile-t data_logger .'
+                sh 'docker build -f docfile -t data_logger .'
             }
         }
 

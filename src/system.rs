@@ -39,15 +39,17 @@ pub fn collect_sensor_data(
     loop {
         sensor.collect_data();
         let timestamp = time();
-        println!(
-            "Time: {}, Sensor: {} Data: {:.2} C",
-            timestamp, sensor.id, sensor.data
-        );
+        //println!(
+        //    "Time: {}, Sensor: {} Data: {:.2} C",
+        //    timestamp, sensor.id, sensor.data
+        //)
+        
         tx.send((sensor.id, sensor.data, timestamp.clone()))
             .expect("Unable to send data");
         thread::sleep(Duration::from_secs(1));
     }
 }
+
 
 pub fn log_data(
     sensor_id: u32,

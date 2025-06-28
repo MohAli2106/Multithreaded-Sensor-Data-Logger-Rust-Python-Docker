@@ -95,4 +95,4 @@ Time: 2024-06-01 12:34:56, Sensor: 1, Data: 23.45
 
 ## License
 
-This project is
+This project is for Educational purpose.

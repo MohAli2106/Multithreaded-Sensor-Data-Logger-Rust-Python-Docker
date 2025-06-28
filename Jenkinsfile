@@ -19,7 +19,15 @@ pipeline {
                 sh 'docker build -f docfile -t data_logger .'
             }
         }
-
+         stage('Stop Existing Container') {
+            steps {
+                echo 'Removing old container (if exists)...'
+                sh '''
+                     docker stop logger || true
+                     docker rm logger || true
+                 '''
+    }
+}
         stage('Run Docker Container') {
             steps {
                 sh 'docker run --name logger data_logger'

@@ -29,11 +29,7 @@ pipeline {
         stage('Archive Sensor Log') {
             steps {
                 echo 'Saving sensor log file...'
-                sh '''
-                    mkdir -p logs
-                    docker cp my_logger:/app/sensor_data.log logs/
-                '''
-                archiveArtifacts artifacts: 'logs/sensor_data.log'
+
             }
         }
     }

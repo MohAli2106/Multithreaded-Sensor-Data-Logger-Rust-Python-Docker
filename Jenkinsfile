@@ -32,6 +32,12 @@ pipeline {
 
             }
         }
+        stage('Clean Up') {
+            steps {
+                sh 'docker rm -f sensor_logger || true'
+                sh 'docker rmi data_logger || true'
+            }
+        }
     }
 
     post {

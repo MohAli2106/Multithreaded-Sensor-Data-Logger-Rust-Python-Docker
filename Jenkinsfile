@@ -18,6 +18,17 @@ stages{
             sh 'cargo run --release'
             }
     }
+    stage('Build Docker Image (Optional)') {
+            steps {
+                sh 'docker build -t data-logger .'
+            }
+        }
+
+        stage('Run App (Optional)') {
+            steps {
+                sh 'docker run -d -p 7877:7877 data-logger'
+            }
+        }
     
 }
 

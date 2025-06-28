@@ -58,4 +58,3 @@ if __name__ == "__main__":
     print("Live plotting sensor_data.log. Close the plot window or stop Rust logger to exit.")
     follow_logfile("sensor_data.log")
 
-plt.savefig('/path/to/output/plot.png')

@@ -1,6 +1,6 @@
 # Multithreaded Sensor Data Logger
 
-This project is a multithreaded sensor data logger written in Rust. It simulates real-time data collection from multiple sensors, logs the data to a file, and provides live plotting using Python and Matplotlib. The project is designed for concurrency, reliability, and extensibility, and includes Docker and CI/CD integration for easy deployment.
+This project is a decoupled sensor data logging system with separate Rust and Python components. The Rust component handles concurrent data collection and logging, while the Python component manages visualization. Both components can run independently or together, with Docker support for containerized deployment.
 
 ---
 
@@ -8,29 +8,23 @@ This project is a multithreaded sensor data logger written in Rust. It simulates
 
 - [Features](#features)
 - [Project Structure](#project-structure)
-- [How It Works](#how-it-works)
+- [Components](#components)
 - [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Build and Run Locally](#build-and-run-locally)
-  - [Using Docker](#using-docker)
-  - [CI/CD with Jenkins](#cicd-with-jenkins)
-  - [GitHub Actions](#github-actions)
+- [Docker Deployment](#docker-deployment)
+- [CI/CD Integration](#cicd-integration)
 - [Customization](#customization)
-- [File Descriptions](#file-descriptions)
-- [Example Log Entry](#example-log-entry)
 - [Troubleshooting](#troubleshooting)
-- [License](#license)
 
 ---
 
 ## Features
 
-- **Concurrent Data Collection:** Each sensor runs in its own thread, generating random temperature readings.
-- **Real-Time Logging:** Sensor data is logged to `sensor_data.log` with timestamps in a thread-safe manner.
-- **Live Plotting:** A Python script reads the log file and plots sensor data in real time.
-- **Thread-Safe Synchronization:** Uses `Mutex` and `Arc` for safe shared access to resources.
-- **Docker Support:** Easily build and run the system in a container.
-- **CI/CD Integration:** Jenkins pipeline and GitHub Actions automate build, test, and deployment steps.
+- **Decoupled Architecture:** Independent Rust and Python components
+- **Concurrent Data Collection:** Multi-threaded sensor simulation
+- **Real-Time Logging:** Thread-safe data logging with timestamps
+- **Data Visualization:** Configurable plotting system
+- **Docker Support:** Containerized deployment options
+- **CI/CD Integration:** Automated build and deployment pipelines
 
 ---
 
@@ -38,122 +32,127 @@ This project is a multithreaded sensor data logger written in Rust. It simulates
 
 ```
 Multithread_data_logger/
-├── .gitignore
-├── Cargo.lock
-├── Cargo.toml
-├── docfile
-├── Jenkinsfile
-├── plot_sensor_data.py
-├── README.md
-├── Rust.code-workspace
-├── sensor_data.log
+├── rust/
+│   ├── Cargo.toml
+│   ├── Cargo.lock
+│   └── src/
+│       ├── main.rs
+│       └── system.rs
+├── python/
+│   ├── plot_live.py
+│   └── requirements.txt
+├── docker/
+│   ├── Dockerfile.rust
+│   └── Dockerfile.python
 ├── .github/
 │   └── workflows/
 │       └── rust.yml
-├── src/
-│   ├── main.rs
-│   └── system.rs
-└── target/
-    └── ...
+├── Jenkinsfile
+└── README.md
 ```
 
 ---
 
-## How It Works
+## Components
 
-1. **Sensors:** Simulated sensors generate random temperature data every second in their own threads.
-2. **Data Logging:** Each reading is written to `sensor_data.log` with a timestamp, using a mutex to prevent race conditions.
-3. **Live Plotting:** The Python script [`plot_sensor_data.py`](plot_sensor_data.py) reads the log file and updates a live plot.
-4. **Dockerized Deployment:** The system can be built and run in a Docker container for portability.
-5. **CI/CD:** Jenkins and GitHub Actions automate building, testing, and running the project.
+### Rust Component
+- Multi-threaded sensor simulation
+- Thread-safe logging system
+- Configurable sensor count and sampling rate
+
+### Python Component
+- Real-time data visualization
+- Configurable plotting options
+- Independent data processing
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
+- Rust (edition 2021)
+- Python 3.6+
+- Docker (optional)
+- Jenkins (optional)
 
-- [Rust](https://www.rust-lang.org/tools/install) (edition 2021)
-- [Python 3](https://www.python.org/) with `matplotlib`
-- (Optional) Docker, if you want to run in a container
-- (Optional) Jenkins, for CI/CD
+### Running Components Separately
 
-### Build and Run Locally
-
+1. Start the Rust logger:
 ```sh
+cd rust/
 cargo run --release
 ```
 
-This will start the logger, which writes data to `sensor_data.log` and launches the live plotting script.
-
-### Using Docker
-
-Build and run with Docker:
-
+2. Run the Python visualizer:
 ```sh
-docker build -t data_logger .
-docker run --name logger data_logger
+cd python/
+python3 plot_live.py
 ```
 
-The Dockerfile is named [`docfile`](docfile).
+---
 
-### CI/CD with Jenkins
+## Docker Deployment
 
-The [Jenkinsfile](Jenkinsfile) automates:
+### Running Individual Components
 
-- Cloning the repository
-- Building the Docker image
-- Stopping/removing any existing container
-- Running the new container
-- (Optionally) Archiving the sensor log
-- Cleaning up Docker images and containers
+1. Build and run Rust logger:
+```sh
+cd docker/
+docker build -f Dockerfile.rust -t sensor-logger .
+docker run --name logger sensor-logger
+```
 
-### GitHub Actions
+---
 
-The workflow in [`.github/workflows/rust.yml`](.github/workflows/rust.yml) builds and tests the project on every push or pull request to the `master` branch.
+## CI/CD Integration
+
+### Jenkins Pipeline
+
+The Jenkinsfile provides:
+- Separate build stages for Rust and Python
+- Automated testing for both components
+- Docker image building and pushing
+- Deployment orchestration
 
 ---
 
 ## Customization
 
-- **Add More Sensors:** Spawn more threads in [`src/main.rs`](src/main.rs).
-- **Change Logging Frequency:** Adjust `thread::sleep` in [`src/system.rs`](src/system.rs).
-- **Change Log Format:** Edit the `log_data` function in [`src/system.rs`](src/system.rs).
-- **Plotting:** Modify [`plot_sensor_data.py`](plot_sensor_data.py) for different visualization needs.
+### Rust Component
+- Modify sensor count in `main.rs`
+- Adjust logging format in `system.rs`
+- Configure sampling rates
 
----
+### Python Component
+- Customize plot styling
+- Add new visualization types
+- Modify data processing logic
 
-## File Descriptions
-
-- [`src/main.rs`](src/main.rs): Entry point. Starts sensor threads, logging, and the Python plotting script.
-- [`src/system.rs`](src/system.rs): Contains sensor simulation and data logging logic.
-- [`plot_sensor_data.py`](plot_sensor_data.py): Python script for live plotting of sensor data from the log file.
-- [`sensor_data.log`](sensor_data.log): Output log file (created at runtime).
-- [`Cargo.toml`](Cargo.toml): Rust project manifest and dependencies.
-- [`docfile`](docfile): Dockerfile for building the container image.
-- [`Jenkinsfile`](Jenkinsfile): Jenkins pipeline for CI/CD.
-- [`.github/workflows/rust.yml`](.github/workflows/rust.yml): GitHub Actions workflow for CI.
-- [`Rust.code-workspace`](Rust.code-workspace): VS Code workspace settings.
-- [`.gitignore`](.gitignore): Git ignore rules.
-
----
-
-## Example Log Entry
-
-```
-Time: 12:34:56.789, Sensor: 1, Data: 23.45
-```
+### Docker Configuration
+- Adjust resource limits
+- Configure networking
+- Modify build arguments
 
 ---
 
 ## Troubleshooting
 
-- **Docker Issues:** Ensure Docker is running and you have permission to run containers.
-- **Jenkins Pipeline Fails:** Check the console output for errors in build or run steps.
-- **Plotting Issues:** Ensure Python 3 and `matplotlib` are installed.
+### Rust Component
+- Check log file permissions
+- Verify thread limits
+- Monitor resource usage
 
----
+### Python Component
+- Verify matplotlib installation
+- Check log file access
+- Monitor memory usage
 
-## License
+### Docker Issues
+- Check container logs
+- Verify network connectivity
+- Monitor resource constraints
 
-This project is for
+### CI/CD Issues
+- Review pipeline logs
+- Check credentials
+- Verify build dependencies

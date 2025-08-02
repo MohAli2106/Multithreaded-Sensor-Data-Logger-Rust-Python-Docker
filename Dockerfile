@@ -26,7 +26,6 @@ WORKDIR /app
 
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
-COPY plot_sensor_data.py .
 RUN cargo add libc
 
 CMD ["cargo", "run", "--release"]

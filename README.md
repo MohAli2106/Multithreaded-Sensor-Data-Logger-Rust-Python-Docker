@@ -65,7 +65,11 @@ Multithread_data_logger/
 - Configurable plotting options
 - Independent data processing
 
+### Archticture
+![system](https://github.com/MohAli2106/Multithreaded-Sensor-Data-Logger-Rust-Python-Docker/blob/master/system%20Arch.png)
+
 ---
+
 
 ## Getting Started
 
@@ -115,8 +119,7 @@ The Jenkinsfile provides:
 - Deployment orchestration
 
 ---
-## Archticture
-![system](sysetm Arch.png)
+
 ## Customization
 
 ### Rust Component

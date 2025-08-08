@@ -115,7 +115,8 @@ The Jenkinsfile provides:
 - Deployment orchestration
 
 ---
-
+## Archticture
+![system](sysetm Arch.png)
 ## Customization
 
 ### Rust Component

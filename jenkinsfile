@@ -86,64 +86,7 @@ pipeline {
             }
         }
 
-        stage('Verify Container Status') {
-            steps {
-                script {
-                    def containerStatus = sh(script: "docker ps -f name=${CONTAINER_NAME} --format '{{.Status}}'", returnStdout: true).trim()
-                    if (containerStatus.contains("Up")) {
-                        echo " Container is running"
-                        sh "docker ps -f name=${CONTAINER_NAME}"
-                    } else {
-                        echo " Container not running: ${containerStatus}"
-                        sh "docker logs ${CONTAINER_NAME}"
-                        error "Container failed to start properly"
-                    }
-                }
-            }
-        }
-
-        stage('Monitor Container') {
-            steps {
-                echo 'Container is now running continuously...'
-                echo 'To extract artifacts, you can:'
-                echo '1. Stop the container manually (Ctrl+C in Jenkins)'
-                echo '2. Or wait for scheduled extraction'
-                echo '3. Or trigger extraction via another job'
-            }
-        }
-
-        // This stage is optional - only run when you want to extract
-        stage('Extract Artifacts on Demand') {
-            when {
-                expression { 
-                    // This stage only runs when manually triggered
-                    return false // Disabled by default
-                }
-            }
-            steps {
-                script {
-                    echo 'Extracting artifacts from running container...'
-                    sh '''
-                        # Extract log file
-                        docker cp ${CONTAINER_NAME}:/workspace/sensor_data.log ./sensor_data.log
-                        # Extract plot
-                        docker cp ${CONTAINER_NAME}:/workspace/python/static/plot.png ./plot.png
-                        
-                        # Verify artifacts
-                        if [ -f sensor_data.log ]; then
-                            echo "✅ sensor_data.log extracted"
-                            head -n 5 sensor_data.log
-                        fi
-                        
-                        if [ -f plot.png ]; then
-                            echo "✅ plot.png extracted"
-                        else
-                            echo "⚠️ plot.png not found (may not be generated yet)"
-                        fi
-                    '''
-                }
-            }
-        }
+    
 
         stage('Clean Up Container') {
             steps {
@@ -168,12 +111,7 @@ pipeline {
         }
         failure {
             echo ' pipeline failed!'
-            sh '''
-                docker stop ${CONTAINER_NAME} || true
-                docker rm ${CONTAINER_NAME} || true
-                rm -f ${CONTAINER_PID_FILE} || true
-            '''
-            mail to: 'admin@example.com', subject: 'Pipeline Failed', body: "Build failed: ${env.BUILD_URL}"
+           
         }
     }
 }

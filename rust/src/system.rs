@@ -3,9 +3,9 @@ use chrono::{DateTime, Local};
 use std::{
     fs::OpenOptions,
     io::Write,
-    sync::{mpsc, Arc, Mutex},
+    sync::{Arc, Mutex},
     thread,
-    time::{Duration, SystemTime},
+    time::Duration,
 };
 
 #[derive(Debug)]
@@ -26,50 +26,24 @@ impl Sensor {
 }
 
 fn time() -> String {
-    let now = SystemTime::now();
+    let now = std::time::SystemTime::now();
     let datetime: DateTime<Local> = now.into();
     datetime.format("%H:%M:%S.%3f").to_string()
 }
 
-pub fn collect_sensor_data(
-    sensor_id: u32,
-    tx: mpsc::Sender<(u32, f64, String)>
-) {
+pub fn collect_sensor_data(sensor_id: u32) {
     let mut sensor = Sensor::new(sensor_id);
+    println!("Sensor {} started", sensor_id);
+
     loop {
         sensor.collect_data();
         let timestamp = time();
-        println!(
-            "Time: {}, Sensor: {} Data: {:.2} C",
+        let log_line = format!(
+            "Time: {}, Sensor: {}, Data: {:.2}",
             timestamp, sensor.id, sensor.data
         );
+        println!("{}", log_line);
 
-        tx.send((sensor.id, sensor.data, timestamp.clone()))
-            .expect("Unable to send data");
-        thread::sleep(Duration::from_secs(1));
+        thread::sleep(Duration::from_millis(500));
     }
-}
-
-
-pub fn log_data(
-    sensor_id: u32,
-    data: f64,
-    file_dir: &str,
-    file_mutex: &Arc<Mutex<()>>,
-    timestamp: String,
-) {
-    let _lock = file_mutex.lock().unwrap();
-
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(file_dir)
-        .expect("Unable to open file");
-
-    writeln!(
-        file,
-        "Time: {}, Sensor: {}, Data: {:.2}",
-        timestamp, sensor_id, data
-    )
-    .expect("Unable to write data to file");
 }

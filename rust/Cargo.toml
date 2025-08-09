@@ -1,5 +1,5 @@
 [package]
-name = "data_logger"
+name = "sensor_monitor"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,3 +7,4 @@ edition = "2021"
 rand = "0.8"
 chrono = "0.4"
 libc = "0.2.174"
+lazy_static = "1.4"

@@ -28,7 +28,7 @@ pipeline {
             }
         }
         
-        stage('Wait for Manual Stop') {
+        stage('publish the data to port') {
             steps {
                 echo "Container is running on port 5000"
                 echo "Access dashboard at: http://localhost:5000"

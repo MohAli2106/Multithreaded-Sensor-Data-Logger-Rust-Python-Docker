@@ -104,11 +104,10 @@ pipeline {
         success {
             echo ' pipeline completed successfully!'
             echo ' Artifacts (sensor_data.log, plot.png) are available in the build'
-            mail to: 'mohamed.moustafa2106.com', subject: 'Pipeline Success', body: 'Sensor monitoring system built and tested successfully!'
         }
         failure {
             echo 'pipeline failed!'
-            mail to: 'mohamed.moustafa2106.com', subject: 'Pipeline Failed', body: "Build failed: ${env.BUILD_URL}"
+           
         }
     }
 }

@@ -1,5 +1,5 @@
-/rust/target
-/rust/src/index.html
-/python/static
-/python/__pycache
+rust/target
+rust/src/index.html
+python/static
+python/__pycache
 Jenkinsfile

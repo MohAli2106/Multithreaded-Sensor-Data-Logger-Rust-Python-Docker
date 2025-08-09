@@ -88,20 +88,8 @@ pipeline {
 
     
 
-        stage('Clean Up Container') {
-            steps {
-                echo 'Cleaning up container (when manually stopped)...'
-                sh '''
-                    # Stop and remove container
-                    docker stop ${CONTAINER_NAME} || true
-                    docker rm ${CONTAINER_NAME} || true
-                    # Remove PID file
-                    rm -f ${CONTAINER_PID_FILE} || true
-                    echo "Container cleaned up"
-                '''
-            }
-        }
-    }
+     
+    
 
     post {
         success {

@@ -24,7 +24,7 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-COPY Cargo.toml Cargo.lock ./
+COPY rust/Cargo.toml rust/Cargo.lock ./
 COPY src ./src
 RUN cargo add libc
 

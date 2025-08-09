@@ -4,12 +4,13 @@ pipeline {
     environment {
         DOCKER_IMAGE_NAME = 'sensor-dashboard'
         CONTAINER_NAME = 'sensor-monitor'
+        CONTAINER_PID_FILE = '/tmp/sensor-container.pid'
     }
 
     stages {
         stage('Initialize') {
             steps {
-                echo " Starting  pipeline..."
+                echo " Starting pipeline..."
                 sh 'echo "Current directory: $(pwd)"'
                 sh 'ls -la'
             }
@@ -17,17 +18,24 @@ pipeline {
 
         stage('Clone Repository') {
             steps {
-                echo "Cloning repository..."
+                echo "🔄 Cloning repository..."
                 git branch: 'main', url: 'https://github.com/MohAli2106/Multithreaded-Sensor-Data-Logger-Rust-Python-Docker.git'
                 sh 'echo "Repository cloned successfully"'
                 sh 'ls -la'
             }
         }
 
+        stage('Check Files') {
+            steps {
+                echo "🔍 Checking files..."
+                sh 'ls -la'
+                sh 'find . -type f -name "Dockerfile" -o -name "Jenkinsfile" | head -5'
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image..."
+                echo " Building Docker image..."
                 sh '''
                     echo "Building with no cache..."
                     docker build --no-cache -t ${DOCKER_IMAGE_NAME} .
@@ -40,61 +48,113 @@ pipeline {
             steps {
                 echo 'Stopping existing container (if any)...'
                 sh '''
-                    docker stop ${CONTAINER_NAME} || true
-                    docker rm ${CONTAINER_NAME} || true
+                    if docker ps -f name=${CONTAINER_NAME} --format "{{.Names}}" | grep -q ${CONTAINER_NAME}; then
+                        echo "Container found, stopping..."
+                        docker stop ${CONTAINER_NAME}
+                        docker rm ${CONTAINER_NAME}
+                    else
+                        echo "No existing container to stop"
+                    fi
                 '''
             }
         }
 
-        stage('Run Docker Container') {
+        stage('Run Docker Container ') {
             steps {
                 script {
-                    echo 'Starting container and waiting for data...'
+                    echo 'Starting container in continuous mode...'
                     sh '''
-                 
-                        docker run -d --name ${CONTAINER_NAME} ${DOCKER_IMAGE_NAME}
+                        # Run container in background and save PID
+                        docker run -d --name ${CONTAINER_NAME} ${DOCKER_IMAGE_NAME} &
+                        CONTAINER_PID=$!
+                        echo $CONTAINER_PID > ${CONTAINER_PID_FILE}
+                        echo "Container started with PID: $CONTAINER_PID"
                         
-                 
-                        sleep 10
+                       
+                        sleep 15
                         
-                            echo "Log file created and populated"
                         
-                 
-                        docker logs ${CONTAINER_NAME}
+                        if docker ps -f name=${CONTAINER_NAME} --format "{{.Names}}" | grep -q ${CONTAINER_NAME}; then
+                            echo " Container is running successfully"
+                        else
+                            echo "Container failed to start"
+                            docker logs ${CONTAINER_NAME}
+                            exit 1
+                        fi
                     '''
                 }
             }
         }
 
-
-        
-
-        stage('Extract Artifacts') {
+        stage('Verify Container Status') {
             steps {
                 script {
-               
+                    def containerStatus = sh(script: "docker ps -f name=${CONTAINER_NAME} --format '{{.Status}}'", returnStdout: true).trim()
+                    if (containerStatus.contains("Up")) {
+                        echo " Container is running"
+                        sh "docker ps -f name=${CONTAINER_NAME}"
+                    } else {
+                        echo " Container not running: ${containerStatus}"
+                        sh "docker logs ${CONTAINER_NAME}"
+                        error "Container failed to start properly"
+                    }
+                }
+            }
+        }
+
+        stage('Monitor Container') {
+            steps {
+                echo 'Container is now running continuously...'
+                echo 'To extract artifacts, you can:'
+                echo '1. Stop the container manually (Ctrl+C in Jenkins)'
+                echo '2. Or wait for scheduled extraction'
+                echo '3. Or trigger extraction via another job'
+            }
+        }
+
+        // This stage is optional - only run when you want to extract
+        stage('Extract Artifacts on Demand') {
+            when {
+                expression { 
+                    // This stage only runs when manually triggered
+                    return false // Disabled by default
+                }
+            }
+            steps {
+                script {
+                    echo 'Extracting artifacts from running container...'
                     sh '''
+                        # Extract log file
                         docker cp ${CONTAINER_NAME}:/workspace/sensor_data.log ./sensor_data.log
+                        # Extract plot
                         docker cp ${CONTAINER_NAME}:/workspace/python/static/plot.png ./plot.png
+                        
+                        # Verify artifacts
+                        if [ -f sensor_data.log ]; then
+                            echo "✅ sensor_data.log extracted"
+                            head -n 5 sensor_data.log
+                        fi
+                        
+                        if [ -f plot.png ]; then
+                            echo "✅ plot.png extracted"
+                        else
+                            echo "⚠️ plot.png not found (may not be generated yet)"
+                        fi
                     '''
                 }
             }
         }
 
-        stage('Archive Artifacts') {
+        stage('Clean Up Container') {
             steps {
-                archiveArtifacts artifacts: 'sensor_data.log, plot.png', allowEmptyArchive: true
-                stash includes: 'sensor_data.log, plot.png', name: 'output-files'
-            }
-        }
-
-        stage('Clean Up') {
-            steps {
+                echo 'Cleaning up container (when manually stopped)...'
                 sh '''
-                    echo "Cleaning up..."
+                    # Stop and remove container
                     docker stop ${CONTAINER_NAME} || true
                     docker rm ${CONTAINER_NAME} || true
-                    docker rmi ${DOCKER_IMAGE_NAME} || true
+                    # Remove PID file
+                    rm -f ${CONTAINER_PID_FILE} || true
+                    echo "Container cleaned up"
                 '''
             }
         }
@@ -103,11 +163,17 @@ pipeline {
     post {
         success {
             echo ' pipeline completed successfully!'
-            echo ' Artifacts (sensor_data.log, plot.png) are available in the build'
+            echo ' Container is running continuously'
+            echo ' Artifacts can be extracted manually or via separate job'
         }
         failure {
-            echo 'pipeline failed!'
-           
+            echo ' pipeline failed!'
+            sh '''
+                docker stop ${CONTAINER_NAME} || true
+                docker rm ${CONTAINER_NAME} || true
+                rm -f ${CONTAINER_PID_FILE} || true
+            '''
+            mail to: 'admin@example.com', subject: 'Pipeline Failed', body: "Build failed: ${env.BUILD_URL}"
         }
     }
 }

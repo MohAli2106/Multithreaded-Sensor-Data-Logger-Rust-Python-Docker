@@ -21,7 +21,7 @@ pipeline {
                     docker rm ${CONTAINER_NAME} || true
                     docker run -d --name ${CONTAINER_NAME} ${DOCKER_IMAGE_NAME}
                     echo "Container started. Pipeline will wait until you stop it manually."
-                    sleep 2
+                    sleep 30
                     docker ps
                 '''
             }

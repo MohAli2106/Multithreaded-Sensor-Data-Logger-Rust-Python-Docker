@@ -1,1 +1,0 @@
-/home/mohamed/Desktop/rust/Multithread_data_logger/rust/target/debug/sensor_monitor: /home/mohamed/Desktop/rust/Multithread_data_logger/rust/src/main.rs /home/mohamed/Desktop/rust/Multithread_data_logger/rust/src/system.rs

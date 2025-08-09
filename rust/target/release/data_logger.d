@@ -1,1 +1,0 @@
-/home/mohamed/Desktop/rust/Multithread_data_logger/target/release/data_logger: /home/mohamed/Desktop/rust/Multithread_data_logger/src/main.rs /home/mohamed/Desktop/rust/Multithread_data_logger/src/system.rs

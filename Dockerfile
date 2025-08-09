@@ -22,7 +22,6 @@ ENV MPLBACKEND=Agg
 
 WORKDIR /workspace
 
-# Install Python deps
 COPY python/requirements.txt .
 RUN pip install --no-cache-dir flask matplotlib
 
@@ -37,7 +36,7 @@ RUN mkdir -p ./static
 
 EXPOSE 5000
 
-# Run with stdout redirected to log file
+
 CMD ["sh", "-c", "\
     echo ' Starting sensor logger...' && \
     ./sensor_app > sensor_data.log 2>&1 & \

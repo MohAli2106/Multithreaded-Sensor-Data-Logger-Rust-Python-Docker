@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git url: 'https://github.com/MohAli2106/Multithread_data_logger '
+                git url: 'https://github.com/MohAli2106/Multithreaded-Sensor-Data-Logger-Rust-Python-Docker.git'
             }
         }
 

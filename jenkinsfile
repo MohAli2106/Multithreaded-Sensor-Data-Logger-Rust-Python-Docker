@@ -22,7 +22,7 @@ pipeline {
                     # Map port 5000 to host port 5000
                     docker run -d -p 5000:5000 --name ${CONTAINER_NAME} ${DOCKER_IMAGE_NAME}
                     echo "Container started on port 5000. You can access it at http://localhost:5000"
-                    sleep 2
+                    sleep 20
                     docker ps
                 '''
             }
@@ -37,16 +37,5 @@ pipeline {
         }
     }
     
-    post {
-        always {
-            sh '''
-                echo "Extracting artifacts..."
-                docker cp ${CONTAINER_NAME}:/workspace/sensor_data.log ./sensor_data.log 2>/dev/null || echo "No log file extracted"
-                docker cp ${CONTAINER_NAME}:/workspace/python/static/plot.png ./plot.png 2>/dev/null || echo "No plot extracted"
-                echo "Artifacts extraction complete."
-                docker stop ${CONTAINER_NAME} || true
-                docker rm ${CONTAINER_NAME} || true
-            '''
-        }
-    }
+  
 }

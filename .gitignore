@@ -1,4 +1,5 @@
 /target
 /src/index.html
-/python
+/python/static
+/python/__pycache
 Rust.code-workspace

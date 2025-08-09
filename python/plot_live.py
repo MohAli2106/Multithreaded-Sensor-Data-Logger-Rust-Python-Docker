@@ -3,7 +3,7 @@ from datetime import datetime
 import re
 
 LOG_PATTERN = r"Time: ([\d\:\.]+), Sensor: (\d+), Data: ([\d\.]+)"
-LOG_FILE = "sensor_data.log"
+LOG_FILE = "./sensor_data.log"
 
 def read_sensor_data(filename):
     timestamps = {}

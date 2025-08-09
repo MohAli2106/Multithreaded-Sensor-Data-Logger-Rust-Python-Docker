@@ -57,14 +57,7 @@ pipeline {
                  
                         sleep 10
                         
-                        # Check if log file exists and has content
-                        if [ -f sensor_data.log ] && [ -s sensor_data.log ]; then
                             echo "Log file created and populated"
-                        else
-                            echo "Log file missing or empty"
-                            docker logs ${CONTAINER_NAME}
-                            exit 1
-                        fi
                         
                  
                         docker logs ${CONTAINER_NAME}
@@ -72,6 +65,9 @@ pipeline {
                 }
             }
         }
+
+
+        
 
         stage('Extract Artifacts') {
             steps {

@@ -51,22 +51,22 @@ pipeline {
                 script {
                     echo 'Starting container and waiting for data...'
                     sh '''
-                        # Run container in background
+                 
                         docker run -d --name ${CONTAINER_NAME} ${DOCKER_IMAGE_NAME}
                         
-                        # Wait 10 seconds for data to be collected
+                 
                         sleep 10
                         
                         # Check if log file exists and has content
                         if [ -f sensor_data.log ] && [ -s sensor_data.log ]; then
-                            echo "✅ Log file created and populated"
+                            echo "Log file created and populated"
                         else
                             echo "Log file missing or empty"
                             docker logs ${CONTAINER_NAME}
                             exit 1
                         fi
                         
-                        # Get container logs for debugging
+                 
                         docker logs ${CONTAINER_NAME}
                     '''
                 }
@@ -76,7 +76,7 @@ pipeline {
         stage('Extract Artifacts') {
             steps {
                 script {
-                    # Copy log file from container
+               
                     sh '''
                         docker cp ${CONTAINER_NAME}:/workspace/sensor_data.log ./sensor_data.log
                         docker cp ${CONTAINER_NAME}:/workspace/python/static/plot.png ./plot.png
